@@ -9,7 +9,7 @@ source:
   url: http://www.jmodelica.org/downloads/FMIL/FMILibrary-{{ version }}-src.zip
   sha256: 85ff3358833818103d05e6d45f3fffcd2bbced9ef5f2262acac4d2de6523356e
   patches:
-    - vc14-stdlib-conflict.patch  # [win and py35]
+    - vc14-stdlib-conflict.patch  # [win and py >= 35]
 
 build:
   number: 0
