@@ -14,9 +14,9 @@ Summary: Package written in C that enables integration of Functional Mock-up Uni
 Current build status
 ====================
 
-Linux: [![Circle CI](https://circleci.com/gh/conda-forge/fmilib-feedstock.svg?style=shield)](https://circleci.com/gh/conda-forge/fmilib-feedstock)
-OSX: [![TravisCI](https://travis-ci.org/conda-forge/fmilib-feedstock.svg?branch=master)](https://travis-ci.org/conda-forge/fmilib-feedstock)
-Windows: [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/conda-forge/fmilib-feedstock?svg=True)](https://ci.appveyor.com/project/conda-forge/fmilib-feedstock/branch/master)
+Linux: [![Circle CI](https://circleci.com/gh/conda-forge/fmilib-feedstock-jschueller-feedstock.svg?style=shield)](https://circleci.com/gh/conda-forge/fmilib-feedstock-jschueller-feedstock)
+OSX: [![TravisCI](https://travis-ci.org/conda-forge/fmilib-feedstock-jschueller-feedstock.svg?branch=master)](https://travis-ci.org/conda-forge/fmilib-feedstock-jschueller-feedstock)
+Windows: [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/conda-forge/fmilib-feedstock-jschueller-feedstock?svg=True)](https://ci.appveyor.com/project/conda-forge/fmilib-feedstock-jschueller-feedstock/branch/master)
 
 Current release info
 ====================
