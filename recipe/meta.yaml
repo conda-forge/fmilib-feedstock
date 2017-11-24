@@ -30,6 +30,8 @@ test:
     - test -f $PREFIX/lib/libfmilib.a                                 # [unix]
     - if not exist %PREFIX%\\Library\\lib\\fmilib.lib exit 1          # [win]
     - if not exist %PREFIX%\\Library\\include\\fmilib.h exit 1        # [win]
+    - conda inspect linkages -p ${PREFIX} fmilib  # [not win]
+    - conda inspect objects -p ${PREFIX} fmilib  # [osx]
 
 about:
   home: http://www.jmodelica.org/FMILibrary
