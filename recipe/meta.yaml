@@ -1,4 +1,4 @@
-{% set version = "2.0.2" %}
+{% set version = "2.0.3" %}
 
 package:
   name: fmilib
@@ -7,16 +7,14 @@ package:
 source:
   fn: FMILibrary-{{ version }}-src.zip
   url: http://www.jmodelica.org/downloads/FMIL/FMILibrary-{{ version }}-src.zip
-  sha256: 85ff3358833818103d05e6d45f3fffcd2bbced9ef5f2262acac4d2de6523356e
-  patches:
-    - vc14-stdlib-conflict.patch  # [win and py >= 35]
+  sha256: 4cc21f9e2c4114a6f4e303f82ca897ec9aa1eb6f7f09fef85979ea5fca309d9a
 
 build:
   number: 0
+  skip: True  # [win and py35]
   features:
     - vc9  # [win and py27]
-    - vc10  # [win and py34]
-    - vc14  # [win and py35]
+    - vc14  # [win and py36]
 
 requirements:
   build:
