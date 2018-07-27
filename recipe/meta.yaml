@@ -6,25 +6,19 @@ package:
 
 source:
   fn: FMILibrary-{{ version }}-src.zip
-  url: http://www.jmodelica.org/downloads/FMIL/FMILibrary-{{ version }}-src.zip
-  sha256: 4cc21f9e2c4114a6f4e303f82ca897ec9aa1eb6f7f09fef85979ea5fca309d9a
+  url: https://github.com/conda-forge/fmilib-feedstock/raw/master/recipe/fmilib-2.0.3.zip
+  sha256: c6161fc180df501e02557e23960fb4c5b8781adbcf81bc829a9ff0ed5b9e3974
 
 build:
-  number: 0
-  skip: True  # [win and py35]
-  features:
-    - vc9  # [win and py27]
-    - vc14  # [win and py36]
+  number: 1
 
 requirements:
   build:
-    - toolchain
     - cmake
-    - python  # [win]
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
 
 test:
-  requires:
-    - python {{ environ['PY_VER'] + '*' }}  # [win]
   commands:
     - test -f $PREFIX/include/fmilib.h                                # [unix]
     - test -f $PREFIX/lib/libfmilib.a                                 # [unix]
