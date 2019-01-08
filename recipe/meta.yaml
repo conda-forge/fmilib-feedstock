@@ -8,6 +8,9 @@ source:
   fn: FMILibrary-{{ version }}-src.zip
   url: https://github.com/conda-forge/fmilib-feedstock/raw/master/recipe/fmilib-2.0.3.zip
   sha256: c6161fc180df501e02557e23960fb4c5b8781adbcf81bc829a9ff0ed5b9e3974
+  patches:
+    # https://github.com/conda/conda-build/issues/3165
+    - undef_gnu_source.patch
 
 build:
   number: 1001
