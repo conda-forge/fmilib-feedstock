@@ -13,7 +13,9 @@ source:
     - undef_gnu_source.patch
 
 build:
-  number: 1001
+  number: 1002
+  run_exports:
+    - {{ pin_subpackage('fmilib', max_pin='x.x') }}
 
 requirements:
   build:
