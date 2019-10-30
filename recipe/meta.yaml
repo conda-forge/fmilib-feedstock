@@ -5,15 +5,18 @@ package:
   version: {{ version }}
 
 source:
-  fn: FMILibrary-{{ version }}-src.zip
-  url: https://jmodelica.org/FMILibrary/FMILibrary-{{ version }}-src.zip
-  sha256: 4cc21f9e2c4114a6f4e303f82ca897ec9aa1eb6f7f09fef85979ea5fca309d9a
+  #url: https://jmodelica.org/FMILibrary/FMILibrary-{{ version }}-src.zip
+  #sha256: 4cc21f9e2c4114a6f4e303f82ca897ec9aa1eb6f7f09fef85979ea5fca309d9a
+  url: https://github.com/conda-forge/fmilib-feedstock/raw/master/recipe/FMILibrary-2.0.3.tar.gz
+  sha256: 455017eea98b966eb5e6deb2f13ca0a9f0f5b204a866f00a41ee02944f3d6662
   patches:
     # https://github.com/conda/conda-build/issues/3165
     - undef_gnu_source.patch
 
 build:
-  number: 1001
+  number: 1002
+  run_exports:
+    - {{ pin_subpackage('fmilib', max_pin='x.x') }}
 
 requirements:
   build:
@@ -33,6 +36,7 @@ test:
 about:
   home: http://www.jmodelica.org/FMILibrary
   license: BSD
+  license_file: LICENSE.md
   summary: Package written in C that enables integration of Functional Mock-up Units
 
 extra:
