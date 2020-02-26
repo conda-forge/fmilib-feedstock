@@ -1,5 +1,5 @@
 
-mkdir build && cd build
+mkdir build_ && cd build_
 
 cmake -LAH -G"NMake Makefiles"                               ^
   -DCMAKE_BUILD_TYPE=Release                                 ^

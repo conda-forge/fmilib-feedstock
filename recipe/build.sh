@@ -1,6 +1,6 @@
 #!/bin/sh
 
-mkdir build && cd build
+mkdir build_ && cd build_
 
 cmake \
   -DCMAKE_BUILD_TYPE=Release \
