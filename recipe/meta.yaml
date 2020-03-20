@@ -33,7 +33,8 @@ test:
 
 about:
   home: http://www.jmodelica.org/FMILibrary
-  license: BSD
+  license: BSD-3-Clause
+  license_family: BSD
   license_file: LICENSE.md
   summary: Package written in C that enables integration of Functional Mock-up Units
 
