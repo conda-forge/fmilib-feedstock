@@ -3,7 +3,7 @@ About fmilib
 
 Home: http://www.jmodelica.org/FMILibrary
 
-Package license: BSD
+Package license: BSD-3-Clause
 
 Feedstock license: BSD 3-Clause
 
