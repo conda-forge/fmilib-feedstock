@@ -1,4 +1,4 @@
-{% set version = "2.2.3" %}
+{% set version = "2.3" %}
 
 package:
   name: fmilib
@@ -6,7 +6,7 @@ package:
 
 source:
   url: https://github.com/modelon-community/fmi-library/archive/{{ version }}.tar.gz
-  sha256: 9a7f70f3ad3ad06c1a33c6bd80ddd6552f065f6a514de3fade99f82a3bd720dc
+  sha256: 826bf4ee9ab52673e8993fe3e275505adeddd8d7c9ee3cb152c700108f82a05a
   patches:
     # https://github.com/conda/conda-build/issues/3165
     - undef_gnu_source.patch
@@ -28,8 +28,6 @@ test:
     - test -f $PREFIX/lib/libfmilib.a                                 # [unix]
     - if not exist %PREFIX%\\Library\\lib\\fmilib.lib exit 1          # [win]
     - if not exist %PREFIX%\\Library\\include\\fmilib.h exit 1        # [win]
-    - conda inspect linkages -p ${PREFIX} fmilib  # [not win]
-    - conda inspect objects -p ${PREFIX} fmilib  # [osx]
 
 about:
   home: http://www.jmodelica.org/FMILibrary
