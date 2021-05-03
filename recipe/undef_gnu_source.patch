@@ -1,30 +1,30 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index f7372bf..bac9439 100644
+index 9efaa70..a329b28 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -283,9 +283,9 @@ endif()
+@@ -284,10 +284,6 @@ endif()
  if(FMILIB_BUILD_SHARED_LIB)
  	add_library(fmilib_shared SHARED ${FMILIB_SHARED_SRC})
  
--    if (UNIX)
+-    if (UNIX AND NOT APPLE)
 -        target_compile_definitions(fmilib_shared PRIVATE -D_GNU_SOURCE)
 -    endif()
-+	#    if (UNIX)
-+	#target_compile_definitions(fmilib_shared PRIVATE -D_GNU_SOURCE)
-+	#    endif()
- 
+-
  	target_link_libraries(fmilib_shared ${FMILIB_SHARED_SUBLIBS})
  	set(FMILIB_TARGETS ${FMILIB_TARGETS} fmilib_shared)
+ endif()
 diff --git a/Config.cmake/jmutil.cmake b/Config.cmake/jmutil.cmake
-index 0cce2f7..1ccebe1 100644
+index 1d2a8bd..f329f6f 100644
 --- a/Config.cmake/jmutil.cmake
 +++ b/Config.cmake/jmutil.cmake
-@@ -63,7 +63,7 @@ endif(CYGWIN)
+@@ -62,10 +62,6 @@ endif(CYGWIN)
+ 
  target_link_libraries(jmutils c99snprintf)
  
- if(UNIX)
+-if(UNIX AND NOT APPLE)
 -    target_compile_definitions(jmutils PRIVATE -D_GNU_SOURCE)
-+	#target_compile_definitions(jmutils PRIVATE -D_GNU_SOURCE)
+-endif()
+-
+ if(UNIX)
  	target_link_libraries(jmutils dl)
  endif(UNIX)
- if(WIN32)
