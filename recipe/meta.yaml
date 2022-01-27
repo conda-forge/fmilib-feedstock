@@ -1,4 +1,4 @@
-{% set version = "2.3" %}
+{% set version = "2.4" %}
 
 package:
   name: fmilib
@@ -6,7 +6,7 @@ package:
 
 source:
   url: https://github.com/modelon-community/fmi-library/archive/{{ version }}.tar.gz
-  sha256: 826bf4ee9ab52673e8993fe3e275505adeddd8d7c9ee3cb152c700108f82a05a
+  sha256: d77ff7c52ab97d8cc6210cee695091e6e3aab9455448ed867231de5bc32e20e5
   patches:
     # https://github.com/conda/conda-build/issues/3165
     - undef_gnu_source.patch
