@@ -7,9 +7,6 @@ package:
 source:
   url: https://github.com/modelon-community/fmi-library/archive/{{ version }}.tar.gz
   sha256: 8199d3e9423494b714b9c4e42f055248457a7c9162df3d4652000aa9a10b8316
-  patches:
-    # https://github.com/conda/conda-build/issues/3165
-    - undef_gnu_source.patch
 
 build:
   number: 0
