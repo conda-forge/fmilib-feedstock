@@ -10,6 +10,8 @@ source:
   patches:
     # https://github.com/conda/conda-build/issues/3165
     - undef_gnu_source.patch
+    # miniunz.c:141:11: error: implicit declaration of function mkdir
+    - mkdir.patch
 
 build:
   number: 1
