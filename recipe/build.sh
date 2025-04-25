@@ -1,6 +1,6 @@
 #!/bin/sh
 # Get an updated config.sub and config.guess
-cp $BUILD_PREFIX/share/gnuconfig/config.* ./ThirdParty/Expat/expat-2.4.8/conftools
+#cp $BUILD_PREFIX/share/gnuconfig/config.* ./ThirdParty/Expat/expat-2.4.8/conftools
 
 cmake ${CMAKE_ARGS} \
   -DCMAKE_BUILD_TYPE=Release \
