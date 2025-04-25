@@ -15,6 +15,9 @@ source:
 
     # error: call to undeclared function 'lseek'; ISO C99 and later do not support implicit function declarations
     - 0001-Fix-mac-build.patch
+    
+    # propagate CMAKE_BUILD_TYPE
+    - 0001-zlib-honor-CMAKE_BUILD_TYPE.patch
 build:
   number: 0
   run_exports:
