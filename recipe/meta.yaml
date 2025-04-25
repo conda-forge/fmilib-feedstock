@@ -1,4 +1,4 @@
-{% set version = "2.4.1" %}
+{% set version = "3.0" %}
 
 package:
   name: fmilib
@@ -6,23 +6,27 @@ package:
 
 source:
   url: https://github.com/modelon-community/fmi-library/archive/{{ version }}.tar.gz
-  sha256: 8199d3e9423494b714b9c4e42f055248457a7c9162df3d4652000aa9a10b8316
+  sha256: 527bd40f4927b6e42c461ef1088dc1df5b1be107ee11200a73ad1a4ab66fe2df
   patches:
-    # https://github.com/conda/conda-build/issues/3165
-    - undef_gnu_source.patch
     # miniunz.c:141:11: error: implicit declaration of function mkdir
     - mkdir.patch
 
+    # error: call to undeclared function 'lseek'; ISO C99 and later do not support implicit function declarations
+    - 0001-Fix-mac-build.patch
+    
+    # propagate CMAKE_BUILD_TYPE
+    - 0001-zlib-honor-CMAKE_BUILD_TYPE.patch
 build:
-  number: 1
+  number: 0
   run_exports:
     - {{ pin_subpackage('fmilib', max_pin='x.x') }}
 
 requirements:
   build:
-    - cmake
+    - cmake <4
     - make  # [unix]
     - gnuconfig  # [unix]
+    - ninja  # [win]
     - {{ compiler('c') }}
     - {{ stdlib("c") }}
     - {{ compiler('cxx') }}

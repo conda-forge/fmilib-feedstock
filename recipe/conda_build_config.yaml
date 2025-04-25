@@ -1,0 +1,6 @@
+# cannot compile old zlib with clang 18 
+c_compiler_version:            # [osx]
+  - 17                         # [osx]
+cxx_compiler_version:          # [osx]
+  - 17                         # [osx]
+
