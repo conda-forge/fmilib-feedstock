@@ -8,8 +8,6 @@ source:
   url: https://github.com/modelon-community/fmi-library/archive/{{ version }}.tar.gz
   sha256: 527bd40f4927b6e42c461ef1088dc1df5b1be107ee11200a73ad1a4ab66fe2df
   patches:
-    # https://github.com/conda/conda-build/issues/3165
-    #- undef_gnu_source.patch
     # miniunz.c:141:11: error: implicit declaration of function mkdir
     - mkdir.patch
 
