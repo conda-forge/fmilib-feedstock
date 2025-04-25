@@ -5,7 +5,7 @@ cp $BUILD_PREFIX/share/gnuconfig/config.* ./ThirdParty/Expat/expat-2.4.8/conftoo
 cmake ${CMAKE_ARGS} \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_PREFIX_PATH=${PREFIX} \
-  -DFMILIB_INSTALL_PREFIX=${PREFIX} \
+  -DCMAKE_INSTALL_PREFIX=${PREFIX} \
   -DFMILIB_BUILD_TESTS=OFF \
   -B build_ .
 
