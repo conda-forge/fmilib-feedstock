@@ -1,8 +1,9 @@
 
-cmake -LAH -G Ninja                                          ^
-  -DCMAKE_PREFIX_PATH="%LIBRARY_PREFIX%"                     ^
-  -DCMAKE_INSTALL_PREFIX="%LIBRARY_PREFIX%"                 ^
+cmake -LAH -G Ninja                                         ^
   -DCMAKE_BUILD_TYPE=Release                                ^
+  -DCMAKE_PREFIX_PATH="%LIBRARY_PREFIX%"                    ^
+  -DCMAKE_INSTALL_PREFIX="%LIBRARY_PREFIX%"                 ^
+  -DFMILIB_BUILD_TESTS=OFF                                  ^
    -B build_ .
 if errorlevel 1 exit 1
 
