@@ -23,6 +23,7 @@ requirements:
     - cmake <4
     - make  # [unix]
     - gnuconfig  # [unix]
+    - ninja  # [win]
     - {{ compiler('c') }}
     - {{ stdlib("c") }}
     - {{ compiler('cxx') }}
