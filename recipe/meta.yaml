@@ -8,9 +8,6 @@ source:
   url: https://github.com/modelon-community/fmi-library/archive/{{ version }}.tar.gz
   sha256: c7a76f486281e4f086b9da5a4137e56c9553bea7fd12461b40e74b046deecccc
   patches:
-    # miniunz.c:141:11: error: implicit declaration of function mkdir
-    - mkdir.patch
-
     # error: call to undeclared function 'lseek'; ISO C99 and later do not support implicit function declarations
     - 0001-Fix-mac-build.patch
 
