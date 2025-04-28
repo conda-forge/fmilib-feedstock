@@ -1,4 +1,4 @@
-{% set version = "3.0" %}
+{% set version = "3.0.1" %}
 
 package:
   name: fmilib
@@ -6,14 +6,14 @@ package:
 
 source:
   url: https://github.com/modelon-community/fmi-library/archive/{{ version }}.tar.gz
-  sha256: 527bd40f4927b6e42c461ef1088dc1df5b1be107ee11200a73ad1a4ab66fe2df
+  sha256: c7a76f486281e4f086b9da5a4137e56c9553bea7fd12461b40e74b046deecccc
   patches:
     # miniunz.c:141:11: error: implicit declaration of function mkdir
     - mkdir.patch
 
     # error: call to undeclared function 'lseek'; ISO C99 and later do not support implicit function declarations
     - 0001-Fix-mac-build.patch
-    
+
     # propagate CMAKE_BUILD_TYPE
     - 0001-zlib-honor-CMAKE_BUILD_TYPE.patch
 build:
