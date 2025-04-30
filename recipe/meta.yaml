@@ -1,4 +1,4 @@
-{% set version = "3.0.1" %}
+{% set version = "3.0.2" %}
 
 package:
   name: fmilib
@@ -6,13 +6,7 @@ package:
 
 source:
   url: https://github.com/modelon-community/fmi-library/archive/{{ version }}.tar.gz
-  sha256: c7a76f486281e4f086b9da5a4137e56c9553bea7fd12461b40e74b046deecccc
-  patches:
-    # error: call to undeclared function 'lseek'; ISO C99 and later do not support implicit function declarations
-    - 0001-Fix-mac-build.patch
-    
-    # propagate CMAKE_BUILD_TYPE
-    - 0001-zlib-honor-CMAKE_BUILD_TYPE.patch
+  sha256: 4b6d2514c79f7e5875b12022a6455dfc999fb5905d973ab875c949362e0c9225
 build:
   number: 0
   run_exports:
