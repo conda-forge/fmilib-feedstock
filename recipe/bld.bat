@@ -1,6 +1,6 @@
 
 
-git clone https://github.com/modelon-community/fmi-library.git
+git clone -b minizip_ng https://github.com/jschueller/fmi-library.git
 cd fmi-library
 
 
