@@ -14,13 +14,17 @@ build:
 
 requirements:
   build:
-    - cmake <4
+    - cmake
     - make  # [unix]
     - gnuconfig  # [unix]
     - ninja  # [win]
     - {{ compiler('c') }}
     - {{ stdlib("c") }}
     - {{ compiler('cxx') }}
+  host:
+    - expat
+    - zlib
+    - minizip
 
 test:
   commands:
