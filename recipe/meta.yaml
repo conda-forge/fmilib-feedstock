@@ -1,4 +1,4 @@
-{% set version = "3.0.3" %}
+{% set version = "3.0.4" %}
 
 package:
   name: fmilib
@@ -6,7 +6,7 @@ package:
 
 source:
   url: https://github.com/modelon-community/fmi-library/archive/{{ version }}.tar.gz
-  sha256: 1acffcd157c2901c5bbccfc848425de0c661eacea24475aff842ef3ba7fb05a6
+  sha256: 99bb1381f67fbc521faf8229ddeb9ae47aaa9d764989dcbc9af296ec565cd34f
 build:
   number: 0
   run_exports:
@@ -14,13 +14,17 @@ build:
 
 requirements:
   build:
-    - cmake <4
+    - cmake
     - make  # [unix]
     - gnuconfig  # [unix]
     - ninja  # [win]
     - {{ compiler('c') }}
     - {{ stdlib("c") }}
     - {{ compiler('cxx') }}
+  host:
+    - expat
+    - zlib
+    - minizip
 
 test:
   commands:
