@@ -8,7 +8,7 @@ source:
   url: https://github.com/modelon-community/fmi-library/archive/{{ version }}.tar.gz
   sha256: 99bb1381f67fbc521faf8229ddeb9ae47aaa9d764989dcbc9af296ec565cd34f
 build:
-  number: 0
+  number: 1
   run_exports:
     - {{ pin_subpackage('fmilib', max_pin='x.x') }}
 
@@ -22,9 +22,9 @@ requirements:
     - {{ stdlib("c") }}
     - {{ compiler('cxx') }}
   host:
-    - expat
-    - zlib
-    - minizip
+    - expat  # [unix]
+    - zlib  # [unix]
+    - minizip  # [unix]
 
 test:
   commands:

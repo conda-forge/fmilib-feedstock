@@ -4,7 +4,7 @@ cmake -LAH -G Ninja                                         ^
   -DCMAKE_PREFIX_PATH="%LIBRARY_PREFIX%"                    ^
   -DCMAKE_INSTALL_PREFIX="%LIBRARY_PREFIX%"                 ^
   -DFMILIB_BUILD_TESTS=OFF                                  ^
-  -DFMILIB_EXTERNAL_LIBS=ON                                 ^
+  -DFMILIB_EXTERNAL_LIBS=OFF                                ^
    -B build_ .
 if errorlevel 1 exit 1
 
