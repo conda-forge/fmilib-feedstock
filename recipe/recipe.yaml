@@ -1,0 +1,54 @@
+context:
+  version: "3.0.4"
+
+package:
+  name: fmilib
+  version: ${{ version }}
+
+source:
+  url: https://github.com/modelon-community/fmi-library/archive/${{ version }}.tar.gz
+  sha256: 99bb1381f67fbc521faf8229ddeb9ae47aaa9d764989dcbc9af296ec565cd34f
+build:
+  number: 2
+
+requirements:
+  build:
+    - cmake
+    - ${{ compiler('c') }}
+    - ${{ stdlib("c") }}
+    - ${{ compiler('cxx') }}
+    - if: unix
+      then:
+        - make
+        - gnuconfig
+      else:
+        - ninja
+  host:
+    - if: unix
+      then:
+        - expat
+        - zlib
+        - minizip
+  run_exports:
+    - ${{ pin_subpackage('fmilib', upper_bound='x.x') }}
+
+tests:
+  - script:
+      - if: unix
+        then:
+          - test -f $PREFIX/include/fmilib.h
+          - test -f $PREFIX/lib/libfmilib.a
+        else:
+          - if not exist %PREFIX%\\Library\\lib\\fmilib.lib exit 1
+          - if not exist %PREFIX%\\Library\\include\\fmilib.h exit 1
+
+about:
+  homepage: http://www.jmodelica.org/FMILibrary
+  license: BSD-3-Clause
+  license_family: BSD
+  license_file: LICENSE.md
+  summary: Package written in C that enables integration of Functional Mock-up Units
+
+extra:
+  recipe-maintainers:
+    - jschueller
