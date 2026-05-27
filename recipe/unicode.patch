@@ -1,0 +1,374 @@
+From cf7a3f44bcf13e130dc9f185b4f04f484d23686b Mon Sep 17 00:00:00 2001
+From: Julien Schueller <schueller@phimeca.com>
+Date: Wed, 27 May 2026 13:21:21 +0200
+Subject: [PATCH] Support Unicode characters in FMU extraction paths on Windows
+
+Replace ANSI Win32 APIs with wide-character variants and add UTF-8/UTF-16 conversion helpers to handle paths containing Unicode characters.
+
+- jm_portability.c: Add jm_utf8_to_wide / jm_wide_to_utf8 helpers; use _wgetcwd for getcwd, _wchdir for chdir, _wmkdir for mkdir, _wmktemp for mkdtemp, GetTempPathW for temp dir, UrlCreateFromPathW for file URLs
+- fmi_miniunz.c: Use _wfopen for file opening, CreateFileW for file date changes, _wmkdir for directory creation, _wchdir for directory changes
+- fmi_minizip.c: Use _wfopen for file opening, FindFirstFileW for file time queries
+
+Closes #208
+Closes #153
+Closes #91
+---
+ src/Util/src/JM/jm_portability.c | 119 +++++++++++++++++++++----------
+ src/ZIP/src/fmi_miniunz.c        |  57 +++++++++++++--
+ src/ZIP/src/fmi_minizip.c        |  32 +++++++--
+ 3 files changed, 161 insertions(+), 47 deletions(-)
+
+diff --git a/src/Util/src/JM/jm_portability.c b/src/Util/src/JM/jm_portability.c
+index b25614f..e09078e 100644
+--- a/src/Util/src/JM/jm_portability.c
++++ b/src/Util/src/JM/jm_portability.c
+@@ -16,8 +16,10 @@
+ #include <stdlib.h>
+ #include <stdio.h>
+ #include <string.h>
++#include <errno.h>
+ 
+ #include <locale.h>
++#include <sys/stat.h>
+ 
+ #if defined(_GNU_SOURCE) || defined(__APPLE__)
+ #define UNIX_THREAD_LOCALE
+@@ -36,14 +38,27 @@
+ static const char * module = "JMPRT";
+ 
+ #ifdef WIN32
++#include <windows.h>
+ #include <shlwapi.h>
+ #include <direct.h>
+-#define get_current_working_directory _getcwd
+-#define set_current_working_directory _chdir    
++#include <io.h>
++
++static wchar_t* jm_utf8_to_wide(const char* utf8) {
++    int len = MultiByteToWideChar(CP_UTF8, 0, utf8, -1, NULL, 0);
++    wchar_t* wide = (wchar_t*)malloc(len * sizeof(wchar_t));
++    if (wide) MultiByteToWideChar(CP_UTF8, 0, utf8, -1, wide, len);
++    return wide;
++}
++
++static char* jm_wide_to_utf8(const wchar_t* wide) {
++    int len = WideCharToMultiByte(CP_UTF8, 0, wide, -1, NULL, 0, NULL, NULL);
++    char* utf8 = (char*)malloc(len);
++    if (utf8) WideCharToMultiByte(CP_UTF8, 0, wide, -1, utf8, len, NULL, NULL);
++    return utf8;
++}
++
+ #else
+ #include <unistd.h>
+-#define get_current_working_directory getcwd
+-#define set_current_working_directory chdir
+ #endif
+ 
+ #define JM_PORTABILITY_DLL_ERROR_MESSAGE_SIZE 1000
+@@ -119,82 +134,104 @@ char* jm_portability_get_last_dll_error(void)
+ 
+ jm_status_enu_t jm_portability_get_current_working_directory(char* buffer, size_t len)
+ {
++#ifdef WIN32
++    wchar_t* wbuf = _wgetcwd(NULL, 0);
++    if (!wbuf) return jm_status_error;
++    char* utf8 = jm_wide_to_utf8(wbuf);
++    free(wbuf);
++    if (!utf8) return jm_status_error;
++    strncpy(buffer, utf8, len);
++    buffer[len - 1] = 0;
++    free(utf8);
++    return jm_status_success;
++#else
+     int ilen = (int)len;
+     if(ilen != len) ilen = FILENAME_MAX + 2;
+-    setlocale(LC_CTYPE, "en_US.UTF-8"); /* just in case, does not seem to have an effect */
+-    if (get_current_working_directory(buffer, ilen) == NULL) {
++    setlocale(LC_CTYPE, "en_US.UTF-8");
++    if (getcwd(buffer, ilen) == NULL) {
+         return jm_status_error;
+     } else {
+         return jm_status_success;
+     }
++#endif
+ }
+ 
+ jm_status_enu_t jm_portability_set_current_working_directory(const char* cwd)
+ {
+-    if (set_current_working_directory(cwd) == 0) {
++#ifdef WIN32
++    wchar_t* wcwd = jm_utf8_to_wide(cwd);
++    if (!wcwd) return jm_status_error;
++    int ret = _wchdir(wcwd);
++    free(wcwd);
++    return (ret == 0) ? jm_status_success : jm_status_error;
++#else
++    if (chdir(cwd) == 0) {
+         return jm_status_success;
+     } else {
+         return jm_status_error;
+     }
+-}
+-
+-#ifdef WIN32
+-#define MAX_TEMP_DIR_NAME_LENGTH 262
+-TCHAR jm_temp_dir_buffer[MAX_TEMP_DIR_NAME_LENGTH];
+ #endif
++}
+ 
+ const char* jm_get_system_temp_dir() {
+ #ifdef WIN32
+-    if(!GetTempPath(MAX_TEMP_DIR_NAME_LENGTH, jm_temp_dir_buffer)) return 0;
+-    return jm_temp_dir_buffer;
++    static char jm_temp_dir_utf8[MAX_PATH + 1];
++    wchar_t wbuf[MAX_PATH + 1];
++    DWORD ret = GetTempPathW(MAX_PATH + 1, wbuf);
++    if (!ret || ret > MAX_PATH) return 0;
++    WideCharToMultiByte(CP_UTF8, 0, wbuf, -1, jm_temp_dir_utf8, MAX_PATH, NULL, NULL);
++    return jm_temp_dir_utf8;
+ #else
+     return "/tmp/";
+ #endif
+ }
+ 
+-#ifdef WIN32
+-#include <io.h>
+-#else
+-#include <stdlib.h>
+-#endif
+ char *jm_mkdtemp(jm_callbacks *cb, char *tmplt)
+ {
+ #ifdef WIN32
+-    /* Windows does not have mkdtemp, use mktemp + mkdir */
+-
+-    if(!_mktemp(tmplt)) {
++    wchar_t* wbuf = jm_utf8_to_wide(tmplt);
++    if (!wbuf) return NULL;
++    if (!_wmktemp(wbuf)) {
++        free(wbuf);
+         jm_log_fatal(cb, module, "Could not create a unique temporary directory name");
+         return NULL;
+     }
++    char* utf8 = jm_wide_to_utf8(wbuf);
++    free(wbuf);
++    if (!utf8) return NULL;
++    strcpy(tmplt, utf8);
++    free(utf8);
+     if(jm_mkdir(cb, tmplt) != jm_status_success) {
+         return NULL;
+     }
+     return tmplt;
+-
+ #else
+     return mkdtemp(tmplt);
+ #endif
+ }
+ 
+-#ifdef WIN32
+-#include <direct.h>
+-#define MKDIR(dir) _mkdir(dir)
+-#else
+-#include <errno.h>
+-#include <sys/stat.h>
+-#define MKDIR(dir) mkdir(dir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)
+-#endif
+-
+ jm_status_enu_t jm_mkdir(jm_callbacks* cb, const char* dir) {
+     if(!cb) {
+         cb = jm_get_default_callbacks();
+     }
+-    if(MKDIR(dir)) {
++#ifdef WIN32
++    wchar_t* wdir = jm_utf8_to_wide(dir);
++    if (!wdir) return jm_status_error;
++    int ret = _wmkdir(wdir);
++    free(wdir);
++    if (ret) {
++        jm_log_fatal(cb,module,"Could not create directory %s", dir);
++        return jm_status_error;
++    }
++    return jm_status_success;
++#else
++    if (mkdir(dir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) {
+         jm_log_fatal(cb,module,"Could not create directory %s", dir);
+         return jm_status_error;
+     }
+     else
+         return jm_status_success;
++#endif
+ }
+ 
+ 
+@@ -318,17 +355,21 @@ char* jm_create_URL_from_abs_path(jm_callbacks* cb, const char* path) {
+ 
+ #if defined(_WIN32) || defined(WIN32)
+     {
++        wchar_t* wpath = jm_utf8_to_wide(path);
++        if (!wpath) return 0;
++        wchar_t wurl[MAX_URL_LENGTH];
+         DWORD pathLen = MAX_URL_LENGTH;
+-        HRESULT code = UrlCreateFromPathA(
+-            path,
+-            buffer,
+-            &pathLen,
+-            0);
++        HRESULT code = UrlCreateFromPathW(wpath, wurl, &pathLen, 0);
++        free(wpath);
+         if( (code != S_FALSE) && (code != S_OK)) {
+             jm_log_fatal(cb, module,"Could not constuct file URL from path %s", path);
+             return 0;
+         }
+-        urllen = pathLen;
++        char* utf8url = jm_wide_to_utf8(wurl);
++        if (!utf8url) return 0;
++        urllen = strlen(utf8url);
++        strcpy(buffer, utf8url);
++        free(utf8url);
+     }
+ #else
+     {
+diff --git a/src/ZIP/src/fmi_miniunz.c b/src/ZIP/src/fmi_miniunz.c
+index 2e15bc9..247809b 100644
+--- a/src/ZIP/src/fmi_miniunz.c
++++ b/src/ZIP/src/fmi_miniunz.c
+@@ -35,7 +35,26 @@
+ /* MODIFICATION: fopen64 etc. are not defined for MSVC. Original minizip handles this via ioapi.h, but minizip-ng doesn't. */
+ #if defined(__APPLE__) || defined(__HAIKU__) || defined(MINIZIP_FOPEN_NO_64) || defined(_MSC_VER)
+ // In darwin and perhaps other BSD variants off_t is a 64 bit value, hence no need for specific 64 bit functions
++#if defined(_WIN32)
++static FILE* fopen_utf8(const char* filename, const char* mode) {
++    wchar_t* wfilename = NULL;
++    wchar_t* wmode = NULL;
++    FILE* f = NULL;
++    int nlen = MultiByteToWideChar(CP_UTF8, 0, filename, -1, NULL, 0);
++    int mlen = MultiByteToWideChar(CP_UTF8, 0, mode, -1, NULL, 0);
++    wfilename = (wchar_t*)malloc((nlen + mlen) * sizeof(wchar_t));
++    if (!wfilename) return NULL;
++    wmode = wfilename + nlen;
++    MultiByteToWideChar(CP_UTF8, 0, filename, -1, wfilename, nlen);
++    MultiByteToWideChar(CP_UTF8, 0, mode, -1, wmode, mlen);
++    f = _wfopen(wfilename, wmode);
++    free(wfilename);
++    return f;
++}
++#define FOPEN_FUNC(filename, mode) fopen_utf8(filename, mode)
++#else
+ #define FOPEN_FUNC(filename, mode) fopen(filename, mode)
++#endif
+ #define FTELLO_FUNC(stream) ftello(stream)
+ #define FSEEKO_FUNC(stream, offset, origin) fseeko(stream, offset, origin)
+ #else
+@@ -94,8 +113,19 @@ static void change_file_date(const char *filename, uLong dosdate, tm_unz tmu_dat
+   HANDLE hFile;
+   FILETIME ftm,ftLocal,ftCreate,ftLastAcc,ftLastWrite;
+ 
+-  hFile = CreateFileA(filename,GENERIC_READ | GENERIC_WRITE,
+-                      0,NULL,OPEN_EXISTING,0,NULL);
++  {
++      wchar_t* wfilename = NULL;
++      int nlen = MultiByteToWideChar(CP_UTF8, 0, filename, -1, NULL, 0);
++      wfilename = (wchar_t*)malloc(nlen * sizeof(wchar_t));
++      if (wfilename) {
++          MultiByteToWideChar(CP_UTF8, 0, filename, -1, wfilename, nlen);
++          hFile = CreateFileW(wfilename, GENERIC_READ | GENERIC_WRITE,
++                              0, NULL, OPEN_EXISTING, 0, NULL);
++          free(wfilename);
++      } else {
++          hFile = INVALID_HANDLE_VALUE;
++      }
++  }
+   GetFileTime(hFile,&ftCreate,&ftLastAcc,&ftLastWrite);
+   DosDateTimeToFileTime((WORD)(dosdate>>16),(WORD)dosdate,&ftLocal);
+   LocalFileTimeToFileTime(&ftLocal,&ftm);
+@@ -134,7 +164,16 @@ static void change_file_date(const char *filename, uLong dosdate, tm_unz tmu_dat
+ static int mymkdir(const char* dirname) {
+     int ret=0;
+ #ifdef _WIN32
+-    ret = _mkdir(dirname);
++    wchar_t* wdirname = NULL;
++    int nlen = MultiByteToWideChar(CP_UTF8, 0, dirname, -1, NULL, 0);
++    wdirname = (wchar_t*)malloc(nlen * sizeof(wchar_t));
++    if (wdirname) {
++        MultiByteToWideChar(CP_UTF8, 0, dirname, -1, wdirname, nlen);
++        ret = _wmkdir(wdirname);
++        free(wdirname);
++    } else {
++        ret = -1;
++    }
+ #elif defined(__unix__)
+     ret = mkdir (dirname,0775);
+ #elif __APPLE__
+@@ -439,7 +478,17 @@ int fmi_miniunz(const char* zipfilename, const char* dirname) {
+ 
+ 
+ #ifdef _WIN32
+-    if (_chdir(dirname))
++    {
++        wchar_t* wdirname = NULL;
++        int nlen = MultiByteToWideChar(CP_UTF8, 0, dirname, -1, NULL, 0);
++        wdirname = (wchar_t*)malloc(nlen * sizeof(wchar_t));
++        int ret = -1;
++        if (wdirname) {
++            MultiByteToWideChar(CP_UTF8, 0, dirname, -1, wdirname, nlen);
++            ret = _wchdir(wdirname);
++            free(wdirname);
++        }
++        if (ret)
+ #else
+     if (chdir(dirname))
+ #endif
+diff --git a/src/ZIP/src/fmi_minizip.c b/src/ZIP/src/fmi_minizip.c
+index a358fa9..81305ae 100644
+--- a/src/ZIP/src/fmi_minizip.c
++++ b/src/ZIP/src/fmi_minizip.c
+@@ -34,9 +34,28 @@
+         #endif
+ #endif
+ 
+-#if defined(__APPLE__) || defined(__HAIKU__) || defined(MINIZIP_FOPEN_NO_64)
++#if defined(__APPLE__) || defined(__HAIKU__) || defined(MINIZIP_FOPEN_NO_64) || defined(_MSC_VER)
+ // In darwin and perhaps other BSD variants off_t is a 64 bit value, hence no need for specific 64 bit functions
++#if defined(_WIN32)
++static FILE* fopen_utf8(const char* filename, const char* mode) {
++    wchar_t* wfilename = NULL;
++    wchar_t* wmode = NULL;
++    FILE* f = NULL;
++    int nlen = MultiByteToWideChar(CP_UTF8, 0, filename, -1, NULL, 0);
++    int mlen = MultiByteToWideChar(CP_UTF8, 0, mode, -1, NULL, 0);
++    wfilename = (wchar_t*)malloc((nlen + mlen) * sizeof(wchar_t));
++    if (!wfilename) return NULL;
++    wmode = wfilename + nlen;
++    MultiByteToWideChar(CP_UTF8, 0, filename, -1, wfilename, nlen);
++    MultiByteToWideChar(CP_UTF8, 0, mode, -1, wmode, mlen);
++    f = _wfopen(wfilename, wmode);
++    free(wfilename);
++    return f;
++}
++#define FOPEN_FUNC(filename, mode) fopen_utf8(filename, mode)
++#else
+ #define FOPEN_FUNC(filename, mode) fopen(filename, mode)
++#endif
+ #define FTELLO_FUNC(stream) ftello(stream)
+ #define FSEEKO_FUNC(stream, offset, origin) fseeko(stream, offset, origin)
+ #else
+@@ -99,9 +118,14 @@ static int filetime(const char *f, tm_zip *tmzip, uLong *dt) {
+   {
+       FILETIME ftLocal;
+       HANDLE hFind;
+-      WIN32_FIND_DATAA ff32;
+-
+-      hFind = FindFirstFileA(f,&ff32);
++      WIN32_FIND_DATAW ff32;
++      wchar_t* wf = NULL;
++      int nlen = MultiByteToWideChar(CP_UTF8, 0, f, -1, NULL, 0);
++      wf = (wchar_t*)malloc(nlen * sizeof(wchar_t));
++      if (!wf) return 0;
++      MultiByteToWideChar(CP_UTF8, 0, f, -1, wf, nlen);
++      hFind = FindFirstFileW(wf,&ff32);
++      free(wf);
+       if (hFind != INVALID_HANDLE_VALUE)
+       {
+         FileTimeToLocalFileTime(&(ff32.ftLastWriteTime),&ftLocal);
+-- 
+2.54.0
+
